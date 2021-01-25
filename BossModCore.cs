@@ -43,6 +43,10 @@ namespace BossModCore
             };
         }
 
+        public BossModCore() : base("Hall of Custom Gods")
+        {
+        }
+
         public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
             Log("Initializing");
@@ -56,21 +60,13 @@ namespace BossModCore
 
             h1SM = GameObject.Instantiate(preloadedObjects["GG_Hornet_1"]["_SceneManager"]);
             UnityEngine.Object.Destroy(h1SM.GetComponent<PlayMakerFSM>());
-            MiscCreator.CreateSceneManager(h1SM.GetComponent<SceneManager>());
+            MiscCreator.ResetSceneManagerAudio(h1SM.GetComponent<SceneManager>());
             h1SM.SetActive(false);
             GameObject.DontDestroyOnLoad(h1SM);
 
             //GameManager.instance.StartCoroutine(DEBUG_Shade_Style());
 
-            LoadResources();
-
             Log("Initialized");
-        }
-
-        private AssetBundle CustomBossScene;
-        private void LoadResources()
-        {
-            CustomBossScene = AssetBundle.LoadFromFile("E:\\Github_Projects\\CustomBossScene Assets\\Assets\\AssetBundles\\custom_bosses_scene");
         }
 
         private void initGlobalSettings()
@@ -111,23 +107,23 @@ namespace BossModCore
             string sceneName = to.name;
             if (sceneName == TransitionGateNames.godhome)
             {
-                // Path of Pain Entrance, needs change to make "Test of Teamwork" accessible
                 sceneChanger.CR_Change_GG_Atrium(to);
             }
             else if (sceneName == "GG_Workshop")
             {
-                CreateStatue("GG_Hollow_Knight");
+                CreateStatue("GG_Hollow_Knight", new Vector3(-10.96f, 0f, 0f));
+                CreateStatue("GG_Hornet_1", new Vector3(0f, 0f, 0f));
+                CreateStatue("GG_Hornet_2", new Vector3(10.96f, 0f, 0f));
             }
             else if (sceneName == "CustomBossScene")
             {
                 GameObject tmpSM = GameObject.Instantiate(h1SM);
                 tmpSM.SetActive(false);
+                MiscCreator.ResetSceneManagerAudio(h1SM.GetComponent<SceneManager>());
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(tmpSM, to);
                 tmpSM.SetActive(true);
 
-                HeroController.instance.StartCoroutine(SetupScene(to, "GG_Hollow_Knight"));
-
-                GameObject.Find("Blanker White").LocateMyFSM("Blanker Control").SendEvent("FADE OUT");
+                //HeroController.instance.StartCoroutine(SetupScene(to, "GG_Hollow_Knight"));
             }
         }
 
@@ -177,12 +173,12 @@ namespace BossModCore
             Log("~SetupScene");
         }
 
-        private void CreateStatue(string prefab)
+        private void CreateStatue(string prefab, Vector3 offset)
         {
             //Used 56's pale prince code here
             GameObject statue = GameObject.Instantiate(GameObject.Find("GG_Statue_ElderHu"));
             statue.name = "GG_Statue_CagneyCarnation";
-            statue.transform.SetPosition3D(41.0f, statue.transform.GetPositionY() + 0.5f, 0f);
+            statue.transform.SetPosition3D(41.0f + offset.x, statue.transform.GetPositionY() + 0.5f + offset.y, 0f + offset.z);
 
             var fsm = statue.FindGameObjectInChildren("Inspect").LocateMyFSM("GG Boss UI");
             var ccsn = new CustomBossCopy.ChangeCopySceneName();

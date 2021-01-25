@@ -8,7 +8,7 @@ using UnityEngine.Audio;
 
 namespace BossModCore.Utils
 {
-    public class MiscCreator
+    public static class MiscCreator
     {
         private static AudioMixer musicAM = null;
         private static AudioMixer atmosAM = null;
@@ -30,7 +30,7 @@ namespace BossModCore.Utils
                 shadeAM = Resources.FindObjectsOfTypeAll<AudioMixer>().First(x => x.name == "ShadeMixer");
         }
 
-        public static void CreateSceneManager(SceneManager sm)
+        public static void ResetSceneManagerAudio(SceneManager sm)
         {
             InitAudioMixers();
 
@@ -43,6 +43,13 @@ namespace BossModCore.Utils
             sm.SetAttr<SceneManager, AtmosCue>("atmosCue", Resources.FindObjectsOfTypeAll<AtmosCue>().First(x => x.name == "None"));
             sm.SetAttr<SceneManager, MusicCue>("musicCue", Resources.FindObjectsOfTypeAll<MusicCue>().First(x => x.name == "None"));
             sm.SetAttr<SceneManager, MusicCue>("infectedMusicCue", Resources.FindObjectsOfTypeAll<MusicCue>().First(x => x.name == "None"));
+        }
+
+        public static void Set(this Vector3 self, double x, double y, double z)
+        {
+            self.x = (float)x;
+            self.y = (float)y;
+            self.y = (float)z;
         }
     }
 }

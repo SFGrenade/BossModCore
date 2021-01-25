@@ -2,6 +2,7 @@
 using System.Collections;
 using BossModCore.Utils;
 using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
@@ -32,18 +33,14 @@ namespace BossModCore.MonoBehaviours
         }
 
         public static string copySceneName = "";
-        private PlayMakerFSM[] blankerControls = null;
 
-        public CustomBossCopy()
+        public IEnumerator Start()
         {
-            StartCoroutine(SetupScene());
-            blankerControls = new PlayMakerFSM[6];
-            blankerControls[0] = GameObject.Find("2dtk Blanker").LocateMyFSM("Blanker Control");
-            blankerControls[1] = GameObject.Find("Blanker White").LocateMyFSM("Blanker Control");
-            blankerControls[2] = GameObject.Find("Blanker").LocateMyFSM("Blanker Control");
-            blankerControls[3] = GameObject.Find("Cutscene Blanker").LocateMyFSM("Blanker Control");
-            blankerControls[4] = GameObject.Find("Quit Blanker").LocateMyFSM("Blanker Control");
-            blankerControls[5] = GameObject.Find("Start Blanker").LocateMyFSM("Blanker Control");
+            Log("!ctor");
+
+            yield return SetupScene();
+
+            Log("~ctor");
         }
 
         private IEnumerator SetupScene()
@@ -52,48 +49,75 @@ namespace BossModCore.MonoBehaviours
 
             var scene = gameObject.scene;
 
-            UnityEngine.SceneManagement.SceneManager.LoadScene(copySceneName, LoadSceneMode.Additive);
-            yield return null;
+            Log(1);
+
+            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(copySceneName, LoadSceneMode.Additive);
+            
             UnityEngine.SceneManagement.SceneManager.SetActiveScene(scene);
 
+            Log(2);
+
             var prefabScene = UnityEngine.SceneManagement.SceneManager.GetSceneByName(copySceneName);
+
+            Log(3);
 
             foreach (var go in prefabScene.GetRootGameObjects())
             {
                 go.SetActive(false);
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(go, scene);
             }
-            //yield return null;
+
+            Log(4);
 
             GameObject bsc = scene.Find("Boss Scene Controller");
 
-            //var bscMB = bsc.GetComponent<BossSceneController>();
-            //bscMB.heroSpawn.position = new Vector3(16, 5);
-            //bscMB.bosses = new HealthManager[0];
-            //bscMB.doTransitionOut = false;
+            Log(5);
+
+            var bscMB = bsc.GetComponent<BossSceneController>();
+            bsc.SetActive(false);
+            BossSceneController.Instance.transitionInHoldTime = 0;
+
+            Log(6);
 
             var dreamEntryControlFsm = bsc.FindGameObjectInChildren("Dream Entry").LocateMyFSM("Control");
-            Log($"dreamEntryControlFsm: {dreamEntryControlFsm}");
+            var dreamEntryControlFsmVars = dreamEntryControlFsm.FsmVariables;
             dreamEntryControlFsm.RemoveAction("Pause", 0);
-            dreamEntryControlFsm.SetState("Door Entry");
-            bsc.SetActive(true);
-            //yield return null;
+            dreamEntryControlFsm.AddAction("Pause", new NextFrameEvent() { sendEvent = FsmEvent.Finished });
 
-            yield return UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(prefabScene);
-            //yield return null;
+            Log(7);
+
+            bsc.SetActive(true);
+
+            Log(8);
+
+            StartCoroutine(unloadScene(prefabScene));
+
+            Log(9);
 
             foreach (var go in scene.GetRootGameObjects())
             {
                 go.SetActive(true);
             }
 
+            Log(10);
+
             GameObject.Find("Blanker White").LocateMyFSM("Blanker Control").SendEvent("FADE OUT");
+            EventRegister.SendEvent("GG TRANSITION IN");
+            BossSceneController.Instance.GetType().GetProperty("HasTransitionedIn").SetValue(BossSceneController.Instance, true, null);
+            HeroController.instance.transform.position = bscMB.heroSpawn.GetComponent<TransitionPoint>().respawnMarker.transform.position;
 
             Log("~SetupScene");
+            yield break;
         }
 
-        public void Start()
+        private void enterLevel()
         {
+
+        }
+
+        private IEnumerator unloadScene(Scene scene)
+        {
+            yield return UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(scene);
         }
 
         private new void Log(string message)
