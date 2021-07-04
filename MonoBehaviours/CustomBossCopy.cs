@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections;
-using BossModCore.Utils;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using ModCommon;
-using ModCommon.Util;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Logger = Modding.Logger;
+using SFCore.Utils;
 
 namespace BossModCore.MonoBehaviours
 {

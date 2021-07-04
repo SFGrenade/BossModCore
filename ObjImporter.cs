@@ -26,7 +26,42 @@ namespace BossModCore
         // Use this for initialization
         public static Mesh ImportFile(string filePath)
         {
-            meshStruct newMesh = createMeshStruct(filePath);
+            meshStruct newMesh = createMeshStructFromFile(filePath);
+            populateMeshStruct(ref newMesh);
+
+            Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
+            Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
+            Vector3[] newNormals = new Vector3[newMesh.faceData.Length];
+            int i = 0;
+            /* The following foreach loops through the facedata and assigns the appropriate vertex, uv, or normal
+             * for the appropriate Unity mesh array.
+             */
+            foreach (Vector3 v in newMesh.faceData)
+            {
+                newVerts[i] = newMesh.vertices[(int)v.x - 1];
+                if (v.y >= 1)
+                    newUVs[i] = newMesh.uv[(int)v.y - 1];
+
+                if (v.z >= 1)
+                    newNormals[i] = newMesh.normals[(int)v.z - 1];
+                i++;
+            }
+
+            Mesh mesh = new Mesh();
+
+            mesh.vertices = newVerts;
+            mesh.uv = newUVs;
+            mesh.normals = newNormals;
+            mesh.triangles = newMesh.triangles;
+
+            mesh.RecalculateBounds();
+            //mesh.Optimize();
+
+            return mesh;
+        }
+        public static Mesh ImportData(string data)
+        {
+            meshStruct newMesh = createMeshStructFromString(data);
             populateMeshStruct(ref newMesh);
 
             Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
@@ -60,7 +95,14 @@ namespace BossModCore
             return mesh;
         }
 
-        private static meshStruct createMeshStruct(string filename)
+        private static meshStruct createMeshStructFromFile(string filename)
+        {
+            StreamReader stream = File.OpenText(filename);
+            string entireText = stream.ReadToEnd();
+            stream.Close();
+            return createMeshStructFromString(entireText, filename);
+        }
+        private static meshStruct createMeshStructFromString(string data, string filename = "")
         {
             int triangles = 0;
             int vertices = 0;
@@ -69,10 +111,7 @@ namespace BossModCore
             int face = 0;
             meshStruct mesh = new meshStruct();
             mesh.fileName = filename;
-            StreamReader stream = File.OpenText(filename);
-            string entireText = stream.ReadToEnd();
-            stream.Close();
-            using (StringReader reader = new StringReader(entireText))
+            using (StringReader reader = new StringReader(data))
             {
                 string currentText = reader.ReadLine();
                 char[] splitIdentifier = { ' ' };

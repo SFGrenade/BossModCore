@@ -3,16 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using BossModCore.Utils;
 using UnityEngine;
 using GlobalEnums;
 using On;
 using Logger = Modding.Logger;
 using UnityEngine.SceneManagement;
 using UnityEngine.Audio;
-using ModCommon.Util;
 using HutongGames.PlayMaker.Actions;
-using ModCommon;
+using SFCore.Utils;
 
 namespace BossModCore
 {
@@ -107,12 +105,12 @@ namespace BossModCore
             }
         }
 
-        public void CR_Change_GG_Atrium(Scene scene)
+        public void Change_GG_Atrium(Scene scene)
         {
             if (scene.name != TransitionGateNames.godhome)
                 return;
 
-            Log("CR_Change_GG_Atrium()");
+            Log("Change_GG_Atrium()");
 
             CreateGateway(TransitionGateNames.gh_cws, new Vector2(50.5f, 8), new Vector2(1, 4), TransitionGateNames.customWorkshop, TransitionGateNames.cws_gh,
                           new Vector2(-3, 0), false, true, false, GameManager.SceneLoadVisualizations.Default);
@@ -186,7 +184,7 @@ namespace BossModCore
 
             prepareGgAtrium(scene);
 
-            Log("CR_Change_GG_Atrium Done");
+            Log("Change_GG_Atrium Done");
         }
 
         private void prepareGgAtrium(Scene scene)

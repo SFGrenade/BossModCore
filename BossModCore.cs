@@ -5,22 +5,20 @@ using System.Collections;
 using System.Collections.Generic;
 using GlobalEnums;
 using Modding;
-using ModCommon;
-using ModCommon.Util;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Audio;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using System.Collections;
 using BossModCore.MonoBehaviours;
-using BossModCore.Utils;
+using SFCore.Generics;
 using UnityEngine.SceneManagement;
 using UGameObject = UnityEngine.GameObject;
+using SFCore.Utils;
 
 namespace BossModCore
 {
-    public class BossModCore : Mod<BmcSaveSettings, BmcGlobalSettings>
+    public class BossModCore : FullSettingsMod<BmcSaveSettings, BmcGlobalSettings>
     {
         internal static BossModCore Instance;
 
@@ -62,9 +60,12 @@ namespace BossModCore
             UnityEngine.Object.Destroy(h1SM.GetComponent<PlayMakerFSM>());
             MiscCreator.ResetSceneManagerAudio(h1SM.GetComponent<SceneManager>());
             h1SM.SetActive(false);
+            h1SM.GetComponent<SceneManager>().enabled = false;
             GameObject.DontDestroyOnLoad(h1SM);
 
             //GameManager.instance.StartCoroutine(DEBUG_Shade_Style());
+
+            BossSceneController.Instance = null;
 
             Log("Initialized");
         }
@@ -84,21 +85,21 @@ namespace BossModCore
         private void initCallbacks()
         {
             // Hooks
-            ModHooks.Instance.GetPlayerBoolHook += OnGetPlayerBoolHook;
-            ModHooks.Instance.SetPlayerBoolHook += OnSetPlayerBoolHook;
-            ModHooks.Instance.GetPlayerIntHook += OnGetPlayerIntHook;
-            ModHooks.Instance.SetPlayerIntHook += OnSetPlayerIntHook;
-            ModHooks.Instance.GetPlayerFloatHook += OnGetPlayerFloatHook;
-            ModHooks.Instance.SetPlayerFloatHook += OnSetPlayerFloatHook;
-            ModHooks.Instance.GetPlayerStringHook += OnGetPlayerStringHook;
-            ModHooks.Instance.SetPlayerStringHook += OnSetPlayerStringHook;
-            ModHooks.Instance.GetPlayerVector3Hook += OnGetPlayerVector3Hook;
-            ModHooks.Instance.SetPlayerVector3Hook += OnSetPlayerVector3Hook;
-            ModHooks.Instance.GetPlayerVariableHook += OnGetPlayerVariableHook;
-            ModHooks.Instance.SetPlayerVariableHook += OnSetPlayerVariableHook;
+            ModHooks.GetPlayerBoolHook += OnGetPlayerBoolHook;
+            ModHooks.SetPlayerBoolHook += OnSetPlayerBoolHook;
+            ModHooks.GetPlayerIntHook += OnGetPlayerVarHook<int>;
+            ModHooks.SetPlayerIntHook += OnSetPlayerIntHook;
+            ModHooks.GetPlayerFloatHook += OnGetPlayerVarHook<float>;
+            ModHooks.SetPlayerFloatHook += OnSetPlayerFloatHook;
+            ModHooks.GetPlayerStringHook += OnGetPlayerVarHook<string>;
+            ModHooks.SetPlayerStringHook += OnSetPlayerStringHook;
+            ModHooks.GetPlayerVector3Hook += OnGetPlayerVarHook<Vector3>;
+            ModHooks.SetPlayerVector3Hook += OnSetPlayerVector3Hook;
+            ModHooks.GetPlayerVariableHook += OnGetPlayerVariableHook;
+            ModHooks.SetPlayerVariableHook += OnSetPlayerVariableHook;
 
-            ModHooks.Instance.AfterSavegameLoadHook += initSaveSettings;
-            ModHooks.Instance.ApplicationQuitHook += SaveTotGlobalSettings;
+            ModHooks.AfterSavegameLoadHook += initSaveSettings;
+            ModHooks.ApplicationQuitHook += SaveTotGlobalSettings;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
@@ -107,7 +108,7 @@ namespace BossModCore
             string sceneName = to.name;
             if (sceneName == TransitionGateNames.godhome)
             {
-                sceneChanger.CR_Change_GG_Atrium(to);
+                sceneChanger.Change_GG_Atrium(to);
             }
             else if (sceneName == "GG_Workshop")
             {
@@ -117,9 +118,10 @@ namespace BossModCore
             }
             else if (sceneName == "CustomBossScene")
             {
+                h1SM.GetComponent<SceneManager>().enabled = true;
                 GameObject tmpSM = GameObject.Instantiate(h1SM);
+                h1SM.GetComponent<SceneManager>().enabled = false;
                 tmpSM.SetActive(false);
-                MiscCreator.ResetSceneManagerAudio(h1SM.GetComponent<SceneManager>());
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(tmpSM, to);
                 tmpSM.SetActive(true);
 
@@ -127,52 +129,7 @@ namespace BossModCore
             }
         }
 
-        private IEnumerator SetupScene(Scene scene, string copySceneName)
-        {
-            Log("!SetupScene");
-
-            //var scene = gameObject.scene;
-
-            UnityEngine.SceneManagement.SceneManager.LoadScene(copySceneName, LoadSceneMode.Additive);
-            yield return null;
-            UnityEngine.SceneManagement.SceneManager.SetActiveScene(scene);
-
-            var prefabScene = UnityEngine.SceneManagement.SceneManager.GetSceneByName(copySceneName);
-
-            foreach (var go in prefabScene.GetRootGameObjects())
-            {
-                go.SetActive(false);
-                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(go, scene);
-            }
-
-            GameObject bsc = scene.Find("Boss Scene Controller");
-
-            var bscMB = bsc.GetComponent<BossSceneController>();
-            bsc.SetActive(false);
-            BossSceneController.Instance.transitionInHoldTime = 0;
-
-            var dreamEntryControlFsm = bsc.FindGameObjectInChildren("Dream Entry").LocateMyFSM("Control");
-            var dreamEntryControlFsmVars = dreamEntryControlFsm.FsmVariables;
-            dreamEntryControlFsm.RemoveAction("Pause", 0);
-            dreamEntryControlFsm.AddAction("Pause", new NextFrameEvent() { sendEvent = FsmEvent.Finished });
-
-            bsc.SetActive(true);
-
-            yield return UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(prefabScene);
-
-            foreach (var go in scene.GetRootGameObjects())
-            {
-                go.SetActive(true);
-            }
-
-            GameObject.Find("Blanker White").LocateMyFSM("Blanker Control").SendEvent("FADE OUT");
-            EventRegister.SendEvent("GG TRANSITION IN");
-            BossSceneController.Instance.GetType().GetProperty("HasTransitionedIn").SetValue(BossSceneController.Instance, true, null);
-            HeroController.instance.transform.position = bscMB.heroSpawn.position + new Vector3(0, 5, 0);
-
-            Log("~SetupScene");
-        }
-
+        // Shamelessly stole jngos code
         private void CreateStatue(string prefab, Vector3 offset)
         {
             //Used 56's pale prince code here
@@ -272,190 +229,169 @@ namespace BossModCore
             }
         }
 
-        private bool OnGetPlayerBoolHook(string target)
+        private bool HasGetSettingsValue<T>(string target)
+        {
+            var tmpField = ReflectionHelper.GetFieldInfo(typeof(BmcSaveSettings), target);
+            return tmpField != null && tmpField.FieldType == typeof(T);
+        }
+        private T GetSettingsValue<T>(string target)
+        {
+            return ReflectionHelper.GetField<BmcSaveSettings, T>(target);
+        }
+        private void SetSettingsValue<T>(string target, T val)
+        {
+            ReflectionHelper.SetField<BmcSaveSettings, T>(target, val);
+        }
+
+        private T OnGetPlayerVarHook<T>(string target, T orig)
+        {
+            Log($"Requested '{typeof(T)}' via '{target}'!");
+            if (HasGetSettingsValue<T>(target))
+            {
+                return GetSettingsValue<T>(target);
+            }
+            return orig;
+        }
+
+        private bool OnGetPlayerBoolHook(string target, bool orig)
         {
             if (target == name)
             {
-                Log("Bool requested via \"" + target + "\"");
                 return true;
             }
-
-            bool ret;
-            if (Settings.BoolValues.ContainsKey(target))
+            if (HasGetSettingsValue<bool>(target))
             {
-                ret = Settings.BoolValues[target];
+                return GetSettingsValue<bool>(target);
             }
-            else
-            {
-                ret = PlayerData.instance.GetBoolInternal(target);
-            }
-            //Log("Bool get: " + target + "=" + ret.ToString());
-            return ret;
+            return orig;
         }
-        private void OnSetPlayerBoolHook(string target, bool val)
+        private bool OnSetPlayerBoolHook(string target, bool orig)
         {
             if (target.StartsWith(name))
             {
-                Log("Bool recieved via \"" + target + "\" => \"" + val + "\"");
+                Log("Bool recieved via \"" + target + "\" => \"" + orig + "\"");
 
                 PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
 
                 if (cmd.BossIndex >= numBosses[cmd.SubscriberClassName])
                 {
                     Log("Index too large!");
-                    return;
+                    return orig;
                 }
 
                 if (cmd.Command == "customScene")
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].customScene = val;
+                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].customScene = orig;
                 }
             }
             else
             {
-                if (Settings.BoolValues.ContainsKey(target))
+                if (HasGetSettingsValue<bool>(target))
                 {
-                    // Other Bools
-                    Settings.BoolValues[target] = val;
-                }
-                else
-                {
-                    PlayerData.instance.SetBoolInternal(target, val);
+                    SetSettingsValue<bool>(target, orig);
                 }
             }
-            //Log("Bool set: " + target + "=" + val.ToString());
+            return orig;
         }
 
-        private int OnGetPlayerIntHook(string target)
+        private int OnSetPlayerIntHook(string target, int orig)
         {
             if (target.StartsWith(name))
             {
-                Log("Int requested via \"" + target + "\"");
-            }
-
-            int ret;
-            if (Settings.IntValues.ContainsKey(target))
-            {
-                ret = Settings.IntValues[target];
-            }
-            else
-            {
-                ret = PlayerData.instance.GetIntInternal(target);
-            }
-            //Log("Int  get: " + target + "=" + ret.ToString());
-            return ret;
-        }
-        private void OnSetPlayerIntHook(string target, int val)
-        {
-            if (target.StartsWith(name))
-            {
-                Log("Int recieved via \"" + target + "\" => \"" + val + "\"");
+                Log("Int recieved via \"" + target + "\" => \"" + orig + "\"");
 
                 PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
                 if (cmd.Command != PlayerDataCommand.Commands.NumBosses.ToString())
                 {
-                    return;
+                    return orig;
                 }
-                numBosses.Add(cmd.SubscriberClassName, val);
+                numBosses.Add(cmd.SubscriberClassName, orig);
                 customBosses.Add(cmd.SubscriberClassName, new List<BossDescription>());
-                for (int i = 0; i < val; i++)
+                for (int i = 0; i < orig; i++)
                 {
                     customBosses[cmd.SubscriberClassName].Add(new BossDescription());
                 }
             }
             else
             {
-                if (Settings.IntValues.ContainsKey(target))
+                if (HasGetSettingsValue<int>(target))
                 {
-                    Settings.IntValues[target] = val;
-                }
-                else
-                {
-                    PlayerData.instance.SetIntInternal(target, val);
+                    SetSettingsValue<int>(target, orig);
                 }
             }
-            //Log("Int  set: " + target + "=" + val.ToString());
+            return orig;
         }
 
-        private float OnGetPlayerFloatHook(string target)
+        private float OnSetPlayerFloatHook(string target, float orig)
         {
             if (target.StartsWith(name))
             {
-                Log("Float requested via \"" + target + "\"");
-            }
-
-            return PlayerData.instance.GetFloatInternal(target);
-        }
-        private void OnSetPlayerFloatHook(string target, float val)
-        {
-            if (target.StartsWith(name))
-            {
-                Log("Float recieved via \"" + target + "\" => \"" + val + "\"");
+                Log("Float recieved via \"" + target + "\" => \"" + orig + "\"");
 
                 //string[] parts = target.Split(new string[] { " - " }, StringSplitOptions.None);
             }
             else
-                PlayerData.instance.SetFloatInternal(target, val);
-        }
-
-        private string OnGetPlayerStringHook(string target)
-        {
-            if (target.StartsWith(name))
             {
-                Log("String requested via \"" + target + "\"");
+                if (HasGetSettingsValue<float>(target))
+                {
+                    SetSettingsValue<float>(target, orig);
+                }
             }
-
-            return PlayerData.instance.GetStringInternal(target);
+            return orig;
         }
-        private void OnSetPlayerStringHook(string target, string val)
+
+        private string OnSetPlayerStringHook(string target, string orig)
         {
             if (target.StartsWith(name))
             {
-                Log("String recieved via \"" + target + "\" => \"" + val + "\"");
+                Log("String recieved via \"" + target + "\" => \"" + orig + "\"");
 
                 PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
                 if (cmd.BossIndex >= numBosses[cmd.SubscriberClassName])
                 {
                     Log("Index too large!");
-                    return;
+                    return orig;
                 }
 
                 if (cmd.Command == PlayerDataCommand.Commands.StatueName.ToString())
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueName = val;
+                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueName = orig;
                 }
                 else if (cmd.Command == PlayerDataCommand.Commands.StatueDescription.ToString())
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueDescription = val;
+                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueDescription = orig;
                 }
                 else if (cmd.Command == PlayerDataCommand.Commands.ScenePrefabName.ToString())
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].scenePrefabName = val;
+                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].scenePrefabName = orig;
                 }
             }
             else
-                PlayerData.instance.SetStringInternal(target, val);
-        }
-
-        private Vector3 OnGetPlayerVector3Hook(string target)
-        {
-            if (target.StartsWith(name))
             {
-                Log("Vector3 requested via \"" + target + "\"");
+                if (HasGetSettingsValue<string>(target))
+                {
+                    SetSettingsValue<string>(target, orig);
+                }
             }
-
-            return PlayerData.instance.GetVector3Internal(target);
+            return orig;
         }
-        private void OnSetPlayerVector3Hook(string target, Vector3 val)
+
+        private Vector3 OnSetPlayerVector3Hook(string target, Vector3 orig)
         {
             if (target.StartsWith(name))
             {
-                Log("Vector3 recieved via \"" + target + "\" => \"" + val + "\"");
+                Log("Vector3 recieved via \"" + target + "\" => \"" + orig + "\"");
 
                 PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
             }
             else
-                PlayerData.instance.SetVector3Internal(target, val);
+            {
+                if (HasGetSettingsValue<Vector3>(target))
+                {
+                    SetSettingsValue<Vector3>(target, orig);
+                }
+            }
+            return orig;
         }
 
         private object OnGetPlayerVariableHook(Type type, string target, object orig)
@@ -465,11 +401,16 @@ namespace BossModCore
                 Log(type.Name + " requested via \"" + target + "\"");
             }
 
+            var tmpField = ReflectionHelper.GetFieldInfo(typeof(BmcSaveSettings), target);
+            if (tmpField != null && tmpField.FieldType == type)
+            {
+                return tmpField.GetValue(_saveSettings);
+            }
             return orig;
         }
-        private object OnSetPlayerVariableHook(Type type, string target, object val)
+        private object OnSetPlayerVariableHook(Type type, string target, object orig)
         {
-            Log(type.Name + " recieved via \"" + target + "\" => \"" + val.ToString() + "\"");
+            Log(type.Name + " recieved via \"" + target + "\" => \"" + orig.ToString() + "\"");
             if (target.StartsWith(name))
             {
                 //Log(type.Name + " recieved via \"" + target + "\" => \"" + val.ToString() + "\"");
@@ -477,7 +418,7 @@ namespace BossModCore
                 if (type.FullName != (new UnityEngine.GameObject()).GetType().FullName)
                 {
                     Log("Wrong type!");
-                    return val;
+                    return returnOnSetPlayerVariableHook(type, target, orig);
                 }
 
                 PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
@@ -486,16 +427,25 @@ namespace BossModCore
                 if (cmd.BossIndex >= numBosses[cmd.SubscriberClassName])
                 {
                     Log("Index too large!");
-                    return val;
+                    return returnOnSetPlayerVariableHook(type, target, orig);
                 }
 
                 if (cmd.Command == PlayerDataCommand.Commands.StatueGO.ToString())
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueGO = (val as UGameObject);
+                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueGO = (UGameObject) orig;
                 }
-                return val;
+                return returnOnSetPlayerVariableHook(type, target, orig);
             }
-            return val;
+            return returnOnSetPlayerVariableHook(type, target, orig);
+        }
+        private object returnOnSetPlayerVariableHook(Type type, string target, object orig)
+        {
+            var tmpField = ReflectionHelper.GetFieldInfo(typeof(BmcSaveSettings), target);
+            if (tmpField != null && tmpField.FieldType == type)
+            {
+                tmpField.SetValue(_saveSettings, orig);
+            }
+            return orig;
         }
         #endregion
 

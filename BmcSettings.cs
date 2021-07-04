@@ -2,11 +2,11 @@
 
 namespace BossModCore
 {
-    public class BmcSaveSettings : ModSettings
+    public class BmcSaveSettings
     {
     }
 
-    public class BmcGlobalSettings : ModSettings
+    public class BmcGlobalSettings
     {
     }
 }
