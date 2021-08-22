@@ -1,6 +1,4 @@
-﻿using Modding;
-
-namespace BossModCore
+﻿namespace BossModCore
 {
     public class BmcSaveSettings
     {

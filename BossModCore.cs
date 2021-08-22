@@ -1,20 +1,13 @@
 ﻿using System;
-using System.IO;
 using System.Reflection;
-using System.Collections;
 using System.Collections.Generic;
-using GlobalEnums;
 using Modding;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Audio;
-using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
 using BossModCore.MonoBehaviours;
 using SFCore.Generics;
-using UnityEngine.SceneManagement;
 using UGameObject = UnityEngine.GameObject;
 using SFCore.Utils;
+using Object = UnityEngine.Object;
 
 namespace BossModCore
 {
@@ -22,12 +15,12 @@ namespace BossModCore
     {
         internal static BossModCore Instance;
 
-        public SceneChanger sceneChanger { get; private set; }
+        public SceneChanger SceneChanger { get; private set; }
 
-        private Dictionary<string, int> numBosses;
-        private Dictionary<string, List<BossDescription>> customBosses;
+        private Dictionary<string, int> _numBosses;
+        private Dictionary<string, List<BossDescription>> _customBosses;
 
-        private GameObject h1SM = null;
+        private GameObject _h1Sm;
 
         public override string GetVersion() => Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
@@ -50,18 +43,18 @@ namespace BossModCore
             Log("Initializing");
             Instance = this;
 
-            initGlobalSettings();
-            sceneChanger = new SceneChanger(preloadedObjects);
-            numBosses = new Dictionary<string, int>();
-            customBosses = new Dictionary<string, List<BossDescription>>();
-            initCallbacks();
+            InitGlobalSettings();
+            SceneChanger = new SceneChanger(preloadedObjects);
+            _numBosses = new Dictionary<string, int>();
+            _customBosses = new Dictionary<string, List<BossDescription>>();
+            InitCallbacks();
 
-            h1SM = GameObject.Instantiate(preloadedObjects["GG_Hornet_1"]["_SceneManager"]);
-            UnityEngine.Object.Destroy(h1SM.GetComponent<PlayMakerFSM>());
-            MiscCreator.ResetSceneManagerAudio(h1SM.GetComponent<SceneManager>());
-            h1SM.SetActive(false);
-            h1SM.GetComponent<SceneManager>().enabled = false;
-            GameObject.DontDestroyOnLoad(h1SM);
+            _h1Sm = Object.Instantiate(preloadedObjects["GG_Hornet_1"]["_SceneManager"]);
+            Object.Destroy(_h1Sm.GetComponent<PlayMakerFSM>());
+            MiscCreator.ResetSceneManagerAudio(_h1Sm.GetComponent<SceneManager>());
+            _h1Sm.SetActive(false);
+            _h1Sm.GetComponent<SceneManager>().enabled = false;
+            Object.DontDestroyOnLoad(_h1Sm);
 
             //GameManager.instance.StartCoroutine(DEBUG_Shade_Style());
 
@@ -70,35 +63,35 @@ namespace BossModCore
             Log("Initialized");
         }
 
-        private void initGlobalSettings()
+        private void InitGlobalSettings()
         {
             // Found in a project, might help saving, don't know, but who cares
             // Global Settings
         }
 
-        private void initSaveSettings(SaveGameData data)
+        private void InitSaveSettings(SaveGameData data)
         {
             // Found in a project, might help saving, don't know, but who cares
             // Save Settings
         }
 
-        private void initCallbacks()
+        private void InitCallbacks()
         {
             // Hooks
             ModHooks.GetPlayerBoolHook += OnGetPlayerBoolHook;
             ModHooks.SetPlayerBoolHook += OnSetPlayerBoolHook;
-            ModHooks.GetPlayerIntHook += OnGetPlayerVarHook<int>;
+            ModHooks.GetPlayerIntHook += OnGetPlayerVarHook;
             ModHooks.SetPlayerIntHook += OnSetPlayerIntHook;
-            ModHooks.GetPlayerFloatHook += OnGetPlayerVarHook<float>;
+            ModHooks.GetPlayerFloatHook += OnGetPlayerVarHook;
             ModHooks.SetPlayerFloatHook += OnSetPlayerFloatHook;
-            ModHooks.GetPlayerStringHook += OnGetPlayerVarHook<string>;
+            ModHooks.GetPlayerStringHook += OnGetPlayerVarHook;
             ModHooks.SetPlayerStringHook += OnSetPlayerStringHook;
-            ModHooks.GetPlayerVector3Hook += OnGetPlayerVarHook<Vector3>;
+            ModHooks.GetPlayerVector3Hook += OnGetPlayerVarHook;
             ModHooks.SetPlayerVector3Hook += OnSetPlayerVector3Hook;
             ModHooks.GetPlayerVariableHook += OnGetPlayerVariableHook;
             ModHooks.SetPlayerVariableHook += OnSetPlayerVariableHook;
 
-            ModHooks.AfterSavegameLoadHook += initSaveSettings;
+            ModHooks.AfterSavegameLoadHook += InitSaveSettings;
             ModHooks.ApplicationQuitHook += SaveTotGlobalSettings;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
@@ -106,9 +99,9 @@ namespace BossModCore
         private void OnSceneChanged(UnityEngine.SceneManagement.Scene from, UnityEngine.SceneManagement.Scene to)
         {
             string sceneName = to.name;
-            if (sceneName == TransitionGateNames.godhome)
+            if (sceneName == TransitionGateNames.Godhome)
             {
-                sceneChanger.Change_GG_Atrium(to);
+                SceneChanger.Change_GG_Atrium(to);
             }
             else if (sceneName == "GG_Workshop")
             {
@@ -118,12 +111,12 @@ namespace BossModCore
             }
             else if (sceneName == "CustomBossScene")
             {
-                h1SM.GetComponent<SceneManager>().enabled = true;
-                GameObject tmpSM = GameObject.Instantiate(h1SM);
-                h1SM.GetComponent<SceneManager>().enabled = false;
-                tmpSM.SetActive(false);
-                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(tmpSM, to);
-                tmpSM.SetActive(true);
+                _h1Sm.GetComponent<SceneManager>().enabled = true;
+                GameObject tmpSm = Object.Instantiate(_h1Sm);
+                _h1Sm.GetComponent<SceneManager>().enabled = false;
+                tmpSm.SetActive(false);
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(tmpSm, to);
+                tmpSm.SetActive(true);
 
                 //HeroController.instance.StartCoroutine(SetupScene(to, "GG_Hollow_Knight"));
             }
@@ -133,7 +126,7 @@ namespace BossModCore
         private void CreateStatue(string prefab, Vector3 offset)
         {
             //Used 56's pale prince code here
-            GameObject statue = GameObject.Instantiate(GameObject.Find("GG_Statue_ElderHu"));
+            GameObject statue = Object.Instantiate(GameObject.Find("GG_Statue_ElderHu"));
             statue.name = "GG_Statue_CagneyCarnation";
             statue.transform.SetPosition3D(41.0f + offset.x, statue.transform.GetPositionY() + 0.5f + offset.y, 0f + offset.z);
 
@@ -187,7 +180,7 @@ namespace BossModCore
 
         #region Get/Set Hooks
 
-        public const string name = "BossModCore";
+        public const string CommandName = "BossModCore";
 
         class PlayerDataCommand
         {
@@ -198,26 +191,26 @@ namespace BossModCore
                 StatueDescription,
                 CustomScene,
                 ScenePrefabName,
-                StatueGO
+                STATUE_GO
             }
-            public string BossModCoreId = name;
+            public string BossModCoreId = CommandName;
             public string SubscriberClassName = "";
             public string Command = "";
-            public int BossIndex = 0;
+            public int BossIndex;
 
             public static PlayerDataCommand Parse(string pdValue)
             {
-                string[] parts = pdValue.Split(new string[] { " - " }, StringSplitOptions.None);
+                string[] parts = pdValue.Split(new[] { " - " }, StringSplitOptions.None);
                 PlayerDataCommand cmd = new PlayerDataCommand();
                 cmd.BossModCoreId = parts[0];
-                if (cmd.BossModCoreId != name) return null;
+                if (cmd.BossModCoreId != CommandName) return null;
                 cmd.SubscriberClassName = parts[1];
                 cmd.Command = parts[2];
                 try
                 {
                     var unused = Enum.Parse(typeof(Commands), cmd.Command);
                 }
-                catch (OverflowException e)
+                catch (OverflowException)
                 {
                     return null;
                 }
@@ -255,7 +248,7 @@ namespace BossModCore
 
         private bool OnGetPlayerBoolHook(string target, bool orig)
         {
-            if (target == name)
+            if (target == CommandName)
             {
                 return true;
             }
@@ -267,13 +260,13 @@ namespace BossModCore
         }
         private bool OnSetPlayerBoolHook(string target, bool orig)
         {
-            if (target.StartsWith(name))
+            if (target.StartsWith(CommandName))
             {
                 Log("Bool recieved via \"" + target + "\" => \"" + orig + "\"");
 
                 PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
 
-                if (cmd.BossIndex >= numBosses[cmd.SubscriberClassName])
+                if (cmd.BossIndex >= _numBosses[cmd.SubscriberClassName])
                 {
                     Log("Index too large!");
                     return orig;
@@ -281,14 +274,14 @@ namespace BossModCore
 
                 if (cmd.Command == "customScene")
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].customScene = orig;
+                    _customBosses[cmd.SubscriberClassName][cmd.BossIndex].customScene = orig;
                 }
             }
             else
             {
                 if (HasGetSettingsValue<bool>(target))
                 {
-                    SetSettingsValue<bool>(target, orig);
+                    SetSettingsValue(target, orig);
                 }
             }
             return orig;
@@ -296,7 +289,7 @@ namespace BossModCore
 
         private int OnSetPlayerIntHook(string target, int orig)
         {
-            if (target.StartsWith(name))
+            if (target.StartsWith(CommandName))
             {
                 Log("Int recieved via \"" + target + "\" => \"" + orig + "\"");
 
@@ -305,18 +298,18 @@ namespace BossModCore
                 {
                     return orig;
                 }
-                numBosses.Add(cmd.SubscriberClassName, orig);
-                customBosses.Add(cmd.SubscriberClassName, new List<BossDescription>());
+                _numBosses.Add(cmd.SubscriberClassName, orig);
+                _customBosses.Add(cmd.SubscriberClassName, new List<BossDescription>());
                 for (int i = 0; i < orig; i++)
                 {
-                    customBosses[cmd.SubscriberClassName].Add(new BossDescription());
+                    _customBosses[cmd.SubscriberClassName].Add(new BossDescription());
                 }
             }
             else
             {
                 if (HasGetSettingsValue<int>(target))
                 {
-                    SetSettingsValue<int>(target, orig);
+                    SetSettingsValue(target, orig);
                 }
             }
             return orig;
@@ -324,7 +317,7 @@ namespace BossModCore
 
         private float OnSetPlayerFloatHook(string target, float orig)
         {
-            if (target.StartsWith(name))
+            if (target.StartsWith(CommandName))
             {
                 Log("Float recieved via \"" + target + "\" => \"" + orig + "\"");
 
@@ -334,7 +327,7 @@ namespace BossModCore
             {
                 if (HasGetSettingsValue<float>(target))
                 {
-                    SetSettingsValue<float>(target, orig);
+                    SetSettingsValue(target, orig);
                 }
             }
             return orig;
@@ -342,12 +335,12 @@ namespace BossModCore
 
         private string OnSetPlayerStringHook(string target, string orig)
         {
-            if (target.StartsWith(name))
+            if (target.StartsWith(CommandName))
             {
                 Log("String recieved via \"" + target + "\" => \"" + orig + "\"");
 
                 PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
-                if (cmd.BossIndex >= numBosses[cmd.SubscriberClassName])
+                if (cmd.BossIndex >= _numBosses[cmd.SubscriberClassName])
                 {
                     Log("Index too large!");
                     return orig;
@@ -355,22 +348,22 @@ namespace BossModCore
 
                 if (cmd.Command == PlayerDataCommand.Commands.StatueName.ToString())
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueName = orig;
+                    _customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueName = orig;
                 }
                 else if (cmd.Command == PlayerDataCommand.Commands.StatueDescription.ToString())
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueDescription = orig;
+                    _customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueDescription = orig;
                 }
                 else if (cmd.Command == PlayerDataCommand.Commands.ScenePrefabName.ToString())
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].scenePrefabName = orig;
+                    _customBosses[cmd.SubscriberClassName][cmd.BossIndex].scenePrefabName = orig;
                 }
             }
             else
             {
                 if (HasGetSettingsValue<string>(target))
                 {
-                    SetSettingsValue<string>(target, orig);
+                    SetSettingsValue(target, orig);
                 }
             }
             return orig;
@@ -378,17 +371,17 @@ namespace BossModCore
 
         private Vector3 OnSetPlayerVector3Hook(string target, Vector3 orig)
         {
-            if (target.StartsWith(name))
+            if (target.StartsWith(CommandName))
             {
                 Log("Vector3 recieved via \"" + target + "\" => \"" + orig + "\"");
 
-                PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
+                PlayerDataCommand.Parse(target);
             }
             else
             {
                 if (HasGetSettingsValue<Vector3>(target))
                 {
-                    SetSettingsValue<Vector3>(target, orig);
+                    SetSettingsValue(target, orig);
                 }
             }
             return orig;
@@ -396,7 +389,7 @@ namespace BossModCore
 
         private object OnGetPlayerVariableHook(Type type, string target, object orig)
         {
-            if (target.StartsWith(name))
+            if (target.StartsWith(CommandName))
             {
                 Log(type.Name + " requested via \"" + target + "\"");
             }
@@ -404,35 +397,33 @@ namespace BossModCore
             var tmpField = ReflectionHelper.GetFieldInfo(typeof(BmcSaveSettings), target);
             if (tmpField != null && tmpField.FieldType == type)
             {
-                return tmpField.GetValue(_saveSettings);
+                return tmpField.GetValue(SaveSettings);
             }
             return orig;
         }
         private object OnSetPlayerVariableHook(Type type, string target, object orig)
         {
-            Log(type.Name + " recieved via \"" + target + "\" => \"" + orig.ToString() + "\"");
-            if (target.StartsWith(name))
+            Log(type.Name + " recieved via \"" + target + "\" => \"" + orig + "\"");
+            if (target.StartsWith(CommandName))
             {
-                //Log(type.Name + " recieved via \"" + target + "\" => \"" + val.ToString() + "\"");
+                //Log(type.CommandName + " recieved via \"" + target + "\" => \"" + val.ToString() + "\"");
 
-                if (type.FullName != (new UnityEngine.GameObject()).GetType().FullName)
+                if (type.FullName != (new GameObject()).GetType().FullName)
                 {
                     Log("Wrong type!");
                     return returnOnSetPlayerVariableHook(type, target, orig);
                 }
 
                 PlayerDataCommand cmd = PlayerDataCommand.Parse(target);
-                string[] parts = target.Split(new string[] { " - " }, StringSplitOptions.None);
-                int index = int.Parse(parts[3]);
-                if (cmd.BossIndex >= numBosses[cmd.SubscriberClassName])
+                if (cmd.BossIndex >= _numBosses[cmd.SubscriberClassName])
                 {
                     Log("Index too large!");
                     return returnOnSetPlayerVariableHook(type, target, orig);
                 }
 
-                if (cmd.Command == PlayerDataCommand.Commands.StatueGO.ToString())
+                if (cmd.Command == PlayerDataCommand.Commands.STATUE_GO.ToString())
                 {
-                    customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueGO = (UGameObject) orig;
+                    _customBosses[cmd.SubscriberClassName][cmd.BossIndex].statueGo = (UGameObject) orig;
                 }
                 return returnOnSetPlayerVariableHook(type, target, orig);
             }
@@ -443,35 +434,10 @@ namespace BossModCore
             var tmpField = ReflectionHelper.GetFieldInfo(typeof(BmcSaveSettings), target);
             if (tmpField != null && tmpField.FieldType == type)
             {
-                tmpField.SetValue(_saveSettings, orig);
+                tmpField.SetValue(SaveSettings, orig);
             }
             return orig;
         }
         #endregion
-
-        private void printDebugFsm(PlayMakerFSM fsm)
-        {
-            foreach (var state in fsm.FsmStates)
-            {
-                Log("State: " + state.Name);
-                foreach (var trans in state.Transitions)
-                {
-                    Log("\t" + trans.EventName + " -> " + trans.ToState);
-                }
-            }
-        }
-
-        private void printDebug(GameObject go, string tabindex = "")
-        {
-            Log(tabindex + "DEBUG Name: " + go.name);
-            foreach (var comp in go.GetComponents<Component>())
-            {
-                Log(tabindex + "DEBUG Component: " + comp.GetType());
-            }
-            for (int i = 0; i < go.transform.childCount; i++)
-            {
-                printDebug(go.transform.GetChild(i).gameObject, tabindex + "\t");
-            }
-        }
     }
 }

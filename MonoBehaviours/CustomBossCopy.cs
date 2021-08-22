@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
@@ -24,7 +23,7 @@ namespace BossModCore.MonoBehaviours
 
             public override void OnEnter()
             {
-                CustomBossCopy.copySceneName = sceneName.Value;
+                copySceneName = sceneName.Value;
 
                 Finish();
             }
@@ -71,14 +70,13 @@ namespace BossModCore.MonoBehaviours
 
             Log(5);
 
-            var bscMB = bsc.GetComponent<BossSceneController>();
+            var bscMb = bsc.GetComponent<BossSceneController>();
             bsc.SetActive(false);
             BossSceneController.Instance.transitionInHoldTime = 0;
 
             Log(6);
 
             var dreamEntryControlFsm = bsc.FindGameObjectInChildren("Dream Entry").LocateMyFSM("Control");
-            var dreamEntryControlFsmVars = dreamEntryControlFsm.FsmVariables;
             dreamEntryControlFsm.RemoveAction("Pause", 0);
             dreamEntryControlFsm.AddAction("Pause", new NextFrameEvent() { sendEvent = FsmEvent.Finished });
 
@@ -88,7 +86,7 @@ namespace BossModCore.MonoBehaviours
 
             Log(8);
 
-            StartCoroutine(unloadScene(prefabScene));
+            StartCoroutine(UnloadScene(prefabScene));
 
             Log(9);
 
@@ -101,24 +99,23 @@ namespace BossModCore.MonoBehaviours
 
             GameObject.Find("Blanker White").LocateMyFSM("Blanker Control").SendEvent("FADE OUT");
             EventRegister.SendEvent("GG TRANSITION IN");
-            BossSceneController.Instance.GetType().GetProperty("HasTransitionedIn").SetValue(BossSceneController.Instance, true, null);
-            HeroController.instance.transform.position = bscMB.heroSpawn.GetComponent<TransitionPoint>().respawnMarker.transform.position;
+            BossSceneController.Instance.GetType().GetProperty("HasTransitionedIn")?.SetValue(BossSceneController.Instance, true, null);
+            HeroController.instance.transform.position = bscMb.heroSpawn.GetComponent<TransitionPoint>().respawnMarker.transform.position;
 
             Log("~SetupScene");
-            yield break;
         }
 
-        private void enterLevel()
+        private void EnterLevel()
         {
 
         }
 
-        private IEnumerator unloadScene(Scene scene)
+        private static IEnumerator UnloadScene(Scene scene)
         {
             yield return UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(scene);
         }
 
-        private new void Log(string message)
+        private void Log(string message)
         {
             Logger.Log($"[{GetType().FullName?.Replace(".", "]:[")}] - {message}");
         }

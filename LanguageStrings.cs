@@ -1,47 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace BossModCore
 {
     class LanguageStrings
     {
-        private const string br = "\n";
-        private const string pg = br + "<page>";
+        private const string Br = "\n";
+        private const string Pg = Br + "<page>";
         #region Language Strings
         // Mechanics
         // Bosses
         // Places
-        public const string AreaTitle_Event = "BossModCore_AreaTitle";
-        public const string AreaTitleSuper_Key = "BossModCore_AreaTitle_SUPER";
-        private const string AreaTitleSuper_Val = "Test of";
-        public const string AreaTitleMain_Key = "BossModCore_AreaTitle_MAIN";
-        private const string AreaTitleMain_Val = "Teamwork";
-        public const string AreaTitleSub_Key = "BossModCore_AreaTitle_SUB";
-        private const string AreaTitleSub_Val = "";
+        public const string AreaTitleEvent = "BossModCore_AreaTitle";
+        public const string AreaTitleSuperKey = "BossModCore_AreaTitle_SUPER";
+        private const string AreaTitleSuperVal = "";
+        public const string AreaTitleMainKey = "BossModCore_AreaTitle_MAIN";
+        private const string AreaTitleMainVal = "";
+        public const string AreaTitleSubKey = "BossModCore_AreaTitle_SUB";
+        private const string AreaTitleSubVal = "";
         // Credits
-        public const string CreditsTabletText_Key = "BossModCore_CreditsTablet";
-        private const string CreditsTabletText_Val = "Credits" + pg +
-                                                     "Person:" + br + "Text" + pg;
+        public const string CreditsTabletTextKey = "BossModCore_CreditsTablet";
+        private const string CreditsTabletTextVal = "Credits" + Pg +
+                                                     "Person:" + Br + "Text" + Pg;
         #endregion
         #region Achievement Strings
         // Bosses
         #endregion
 
-        private Dictionary<string, string> dict;
+        private readonly Dictionary<string, string> _dict;
 
         public LanguageStrings()
         {
             // Initialize LangString Dictionary
-            dict = new Dictionary<string, string>();
+            _dict = new Dictionary<string, string>();
             // Inventory Items
             // Boss Names
             // Places
-            dict.Add(AreaTitleSuper_Key, AreaTitleSuper_Val);
-            dict.Add(AreaTitleMain_Key, AreaTitleMain_Val);
-            dict.Add(AreaTitleSub_Key, AreaTitleSub_Val);
-            dict.Add(CreditsTabletText_Key, CreditsTabletText_Val);
+            _dict.Add(AreaTitleSuperKey, AreaTitleSuperVal);
+            _dict.Add(AreaTitleMainKey, AreaTitleMainVal);
+            _dict.Add(AreaTitleSubKey, AreaTitleSubVal);
+            _dict.Add(CreditsTabletTextKey, CreditsTabletTextVal);
 
             // Achievements
             // Bosses
@@ -49,12 +46,12 @@ namespace BossModCore
 
         public string Get(string key)
         {
-            return dict[key];
+            return _dict[key];
         }
 
         public bool ContainsKey(string key)
         {
-            return dict.ContainsKey(key);
+            return _dict.ContainsKey(key);
         }
     }
 }

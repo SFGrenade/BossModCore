@@ -1,14 +1,12 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace BossModCore
 {
     class ObjImporter
     {
-        private struct meshStruct
+        private struct MeshStruct
         {
             public Vector3[] vertices;
             public Vector3[] normals;
@@ -26,8 +24,8 @@ namespace BossModCore
         // Use this for initialization
         public static Mesh ImportFile(string filePath)
         {
-            meshStruct newMesh = createMeshStructFromFile(filePath);
-            populateMeshStruct(ref newMesh);
+            MeshStruct newMesh = CreateMeshStructFromFile(filePath);
+            PopulateMeshStruct(ref newMesh);
 
             Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
             Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
@@ -61,8 +59,8 @@ namespace BossModCore
         }
         public static Mesh ImportData(string data)
         {
-            meshStruct newMesh = createMeshStructFromString(data);
-            populateMeshStruct(ref newMesh);
+            MeshStruct newMesh = CreateMeshStructFromString(data);
+            PopulateMeshStruct(ref newMesh);
 
             Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
             Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
@@ -95,21 +93,21 @@ namespace BossModCore
             return mesh;
         }
 
-        private static meshStruct createMeshStructFromFile(string filename)
+        private static MeshStruct CreateMeshStructFromFile(string filename)
         {
             StreamReader stream = File.OpenText(filename);
             string entireText = stream.ReadToEnd();
             stream.Close();
-            return createMeshStructFromString(entireText, filename);
+            return CreateMeshStructFromString(entireText, filename);
         }
-        private static meshStruct createMeshStructFromString(string data, string filename = "")
+        private static MeshStruct CreateMeshStructFromString(string data, string filename = "")
         {
             int triangles = 0;
             int vertices = 0;
             int vt = 0;
             int vn = 0;
             int face = 0;
-            meshStruct mesh = new meshStruct();
+            MeshStruct mesh = new MeshStruct();
             mesh.fileName = filename;
             using (StringReader reader = new StringReader(data))
             {
@@ -165,7 +163,7 @@ namespace BossModCore
             return mesh;
         }
 
-        private static void populateMeshStruct(ref meshStruct mesh)
+        private static void PopulateMeshStruct(ref MeshStruct mesh)
         {
             StreamReader stream = File.OpenText(mesh.fileName);
             string entireText = stream.ReadToEnd();

@@ -2,12 +2,12 @@
 
 namespace BossModCore
 {
-    class BossDescription
+    public class BossDescription
     {
         public string statueName;
         public string statueDescription;
         public bool customScene; // either a prefab, or custom supplied one (name below)
         public string scenePrefabName; // either this or custom supplied one
-        public UGameObject statueGO;
+        public UGameObject statueGo;
     }
 }
