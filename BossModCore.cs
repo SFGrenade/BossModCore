@@ -8,6 +8,7 @@ using SFCore.Generics;
 using UGameObject = UnityEngine.GameObject;
 using SFCore.Utils;
 using Object = UnityEngine.Object;
+using MonoMod.ModInterop;
 
 namespace BossModCore
 {
@@ -32,6 +33,12 @@ namespace BossModCore
                 new ValueTuple<string, string>("GG_Hornet_1", "Boss Scene Controller"),
                 new ValueTuple<string, string>("GG_Hornet_1", "_SceneManager")
             };
+        }
+
+        static BossModCore()
+        {
+            // When your mod gets loaded, register ModExports.
+            typeof(BmcApi).ModInterop();
         }
 
         public BossModCore() : base("Hall of Custom Gods")
