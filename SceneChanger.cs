@@ -23,7 +23,7 @@ namespace BossModCore
     public class SceneChanger : MonoBehaviour
     {
         private static bool _debug = true;
-        private static string _abPath = "E:\\Github_Projects\\CustomBossScene Assets\\Assets\\AssetBundles\\";
+        private static string _abPath = "E:\\Documents\\Projects\\Unity Projects\\CustomBossScene Assets\\Assets\\AssetBundles\\";
 
         public AssetBundle AbBmcScene { get; private set; }
         public AssetBundle AbBmcMat { get; private set; } = null;
@@ -81,7 +81,7 @@ namespace BossModCore
             #region Load misc
             Log("Loading Meshes");
             
-            GgAtriumNewmesh = ObjImporter.ImportFile(@"E:\Github_Projects\HollowKnightMods\BossModCore\Resources\GG_Atrium_NewMesh.obj");
+            GgAtriumNewmesh = ObjImporter.ImportFile(@"E:\Documents\Projects\HollowKnightMods\BossModCore\Resources\GG_Atrium_NewMesh.obj");
             
             Log("Finished loading Meshes");
             #endregion

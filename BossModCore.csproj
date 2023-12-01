@@ -6,7 +6,8 @@
     <AssemblyTitle>BossModCore</AssemblyTitle>
     <Product>BossModCore</Product>
     <Description>A Hollow Knight Mod</Description>
-    <Copyright>Copyright © SFGrenade 2019-2021</Copyright>
+    <Copyright>Copyright © SFGrenade 2024</Copyright>
+    <PathMap>$(MSBuildProjectDirectory)=source</PathMap>
     <AssemblyVersion>1.5.0.0</AssemblyVersion>
     <FileVersion>1.5.0.0</FileVersion>
     <OutputPath>bin/$(Configuration)/</OutputPath>
@@ -16,8 +17,13 @@
     <HollowKnightRefs Condition="$([MSBuild]::IsOSPlatform('Windows'))">E:/GOG/Hollow Knight 1.5 Modded/Hollow Knight_Data/Managed/</HollowKnightRefs>
     <ExportDir Condition="$([MSBuild]::IsOSPlatform('Linux'))">/home/sfg/Documents/Projects/__Exports/</ExportDir>
     <ExportDir Condition="$([MSBuild]::IsOSPlatform('Windows'))">E:/Documents/Projects/__Exports/</ExportDir>
+    <UnityDir Condition="$([MSBuild]::IsOSPlatform('Windows'))">E:/Documents/Projects/Unity Projects/CustomBossScene Assets/</UnityDir>
     <!--<DocumentationFile>$(OutputPath)/$(AssemblyTitle).xml</DocumentationFile>-->
   </PropertyGroup>
+  <Target Name="CopyAssetbundles" BeforeTargets="PreBuildEvent">
+    <Delete Condition="$([MSBuild]::IsOSPlatform('Windows'))" Files="$(ProjectDir)/Resources/custom_bosses_scene" />
+    <Copy Condition="$([MSBuild]::IsOSPlatform('Windows'))" SourceFiles="$(UnityDir)/Assets/AssetBundles/custom_bosses_scene" DestinationFolder="$(ProjectDir)/Resources/" />
+  </Target>
   <Target Name="CopyMod" AfterTargets="PostBuildEvent">
     <RemoveDir Condition="Exists('$(ExportDir)/$(TargetName)/')" Directories="$(ExportDir)/$(TargetName)/" />
     <MakeDir Directories="$(ExportDir)/$(TargetName)/" />
@@ -26,12 +32,12 @@
 
     <Copy Condition="'$(DocumentationFile)'!=''" SourceFiles="$(TargetPath);$(TargetDir)/$(TargetName).pdb;$(TargetDir)/$(TargetName).xml" DestinationFolder="$(HollowKnightRefs)/Mods/$(TargetName)/" />
     <Copy Condition="'$(DocumentationFile)'==''" SourceFiles="$(TargetPath);$(TargetDir)/$(TargetName).pdb" DestinationFolder="$(HollowKnightRefs)/Mods/$(TargetName)/" />
-    
+
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ExportDir)/$(TargetName)/" />
-    
+
     <Copy Condition="'$(DocumentationFile)'!=''" SourceFiles="ReadMe.md;$(TargetPath);$(TargetDir)/$(TargetName).pdb;$(TargetDir)/$(TargetName).xml" DestinationFolder="$(ExportDir)/$(TargetName)/zip/" />
     <Copy Condition="'$(DocumentationFile)'==''" SourceFiles="ReadMe.md;$(TargetPath);$(TargetDir)/$(TargetName).pdb" DestinationFolder="$(ExportDir)/$(TargetName)/zip/" />
-    
+
     <ZipDirectory SourceDirectory="$(ExportDir)/$(TargetName)/zip/" DestinationFile="$(ExportDir)/$(TargetName)/$(TargetName).zip" />
     <RemoveDir Directories="$(ExportDir)/$(TargetName)/zip/" />
 
