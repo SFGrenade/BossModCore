@@ -49,7 +49,7 @@ namespace BossModCore.MonoBehaviours
             Log(1);
 
             yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(copySceneName, LoadSceneMode.Additive);
-            
+
             UnityEngine.SceneManagement.SceneManager.SetActiveScene(scene);
 
             Log(2);

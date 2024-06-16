@@ -80,9 +80,9 @@ namespace BossModCore
 
             #region Load misc
             Log("Loading Meshes");
-            
+
             GgAtriumNewmesh = ObjImporter.ImportFile(@"E:\Documents\Projects\HollowKnightMods\BossModCore\Resources\GG_Atrium_NewMesh.obj");
-            
+
             Log("Finished loading Meshes");
             #endregion
         }
