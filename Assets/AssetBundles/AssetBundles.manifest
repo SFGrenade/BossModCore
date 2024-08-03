@@ -1,0 +1,7 @@
+ManifestFileVersion: 0
+CRC: 2015847699
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: custom_bosses_scene
+      Dependencies: {}
