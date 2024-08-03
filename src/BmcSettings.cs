@@ -1,10 +1,9 @@
-﻿namespace BossModCore
-{
-    public class BmcSaveSettings
-    {
-    }
+﻿namespace BossModCore;
 
-    public class BmcGlobalSettings
-    {
-    }
+public class BmcSaveSettings
+{
+}
+
+public class BmcGlobalSettings
+{
 }
