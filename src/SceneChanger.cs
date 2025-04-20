@@ -80,7 +80,7 @@ public class SceneChanger : MonoBehaviour
         #region Load misc
         Log("Loading Meshes");
 
-        GgAtriumNewmesh = ObjImporter.ImportFile(@"E:/Documents/Hollow Knight Stuff\HollowKnightMods\BossModCore\Resources\GG_Atrium_NewMesh.obj");
+        GgAtriumNewmesh = ObjImporter.ImportFile(@"C:/Users/SFG/Documents/Hollow Knight Stuff\HollowKnightMods\BossModCore\Resources\GG_Atrium_NewMesh.obj");
 
         Log("Finished loading Meshes");
         #endregion
