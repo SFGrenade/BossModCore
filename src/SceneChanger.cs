@@ -22,7 +22,7 @@ internal enum EnviromentType
 public class SceneChanger : MonoBehaviour
 {
     private static bool _debug = true;
-    private static string _abPath = "E:\\Documents\\Projects\\Unity Projects\\CustomBossScene Assets\\Assets\\AssetBundles\\";
+    private static string _abPath = "C:\\Users\\SFG\\Documents\\Projects\\Unity Projects\\CustomBossScene Assets\\Assets\\AssetBundles\\";
 
     public AssetBundle AbBmcScene { get; private set; }
     public AssetBundle AbBmcMat { get; private set; } = null;
